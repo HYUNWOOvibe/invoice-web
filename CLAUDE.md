@@ -24,6 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `sonner` | 토스트 알림 |
 | `tailwind-merge` | Tailwind 클래스 병합 유틸 |
 | `clsx` | 조건부 클래스 생성 |
+| `@supabase/ssr` | Supabase 인증 + DB (SSR 지원) |
+| `@notionhq/client` | Notion API 공식 SDK |
+| `@react-pdf/renderer` | 서버 사이드 PDF 생성 |
 
 ## 개발 명령어
 
@@ -50,25 +53,42 @@ npx tsc --noEmit           # 타입만 검사 (빌드 없음)
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx               # 루트 레이아웃 (ThemeProvider, Toaster)
-│   ├── page.tsx                 # 홈페이지
-│   └── globals.css              # 글로벌 스타일
+├── app/                              # Next.js App Router
+│   ├── layout.tsx                   # 루트 레이아웃 (ThemeProvider, Toaster)
+│   ├── page.tsx                     # 홈페이지 (랜딩)
+│   ├── globals.css                  # 글로벌 스타일
+│   ├── not-found.tsx                # 전역 404 페이지
+│   ├── login/page.tsx               # 로그인 (발행자 전용)
+│   ├── signup/page.tsx              # 회원가입
+│   ├── dashboard/                   # 견적서 관리 (인증 필요)
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── settings/page.tsx            # Notion 연동 설정 (인증 필요)
+│   ├── invoice/[slug]/page.tsx      # 견적서 확인 (공개 페이지)
+│   └── api/
+│       ├── invoice/[slug]/pdf/      # PDF 생성 Route Handler
+│       │   └── route.ts
+│       └── notion/test/route.ts     # Notion 연결 테스트
 ├── components/
-│   ├── layout/                  # 레이아웃 컴포넌트
-│   │   ├── header.tsx           # 헤더 (네비게이션, 테마토글)
-│   │   ├── footer.tsx           # 푸터
-│   │   └── container.tsx        # 컨테이너 (Max-width wrapper)
-│   ├── theme/                   # 테마 관련
-│   │   ├── theme-provider.tsx   # next-themes 설정
-│   │   └── theme-toggle.tsx     # 테마 전환 버튼
-│   └── ui/                      # shadcn UI 컴포넌트들
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── input.tsx
-│       ├── dialog.tsx
-│       └── ...
-└── lib/                         # 유틸리티 함수
+│   ├── layout/                      # 레이아웃 컴포넌트
+│   │   ├── header.tsx               # 헤더 (인증 상태별 메뉴)
+│   │   ├── footer.tsx               # 푸터
+│   │   └── container.tsx            # Max-width wrapper
+│   ├── invoice/                     # 견적서 도메인 컴포넌트 (구현 예정)
+│   │   ├── invoice-header.tsx       # 발행자/클라이언트/메타 정보
+│   │   ├── invoice-table.tsx        # 견적 항목 테이블
+│   │   ├── invoice-card.tsx         # 대시보드 카드
+│   │   └── invoice-pdf.tsx          # PDF 문서 컴포넌트
+│   ├── theme/                       # 테마 관련
+│   │   ├── theme-provider.tsx       # next-themes 설정
+│   │   └── theme-toggle.tsx         # 테마 전환 버튼
+│   └── ui/                          # shadcn UI 컴포넌트
+├── lib/
+│   ├── supabase.ts                  # Supabase 클라이언트 (브라우저/서버 분리 예정)
+│   ├── notion.ts                    # Notion 클라이언트 + 쿼리 함수
+│   └── utils.ts                     # cn() 등 유틸리티
+└── types/
+    └── index.ts                     # Invoice, InvoiceItem 등 공유 타입
 ```
 
 ## 핵심 아키텍처
@@ -78,10 +98,31 @@ src/
 - 글로벌 폰트 (Geist Sans, Geist Mono)는 CSS 변수로 적용
 - `Toaster` 컴포넌트로 모든 페이지에서 Sonner 알림 사용 가능
 
+### 인증 및 라우트 보호
+- `src/middleware.ts`로 보호 경로 (`/dashboard`, `/settings`) 접근 제어
+- 미인증 접근 시 `/login`으로 리디렉션
+- `/invoice/[slug]`는 인증 없이 공개 접근 가능
+
+### Supabase 클라이언트 이중화
+- `src/lib/supabase/client.ts` — `createBrowserClient()` (Client Component용)
+- `src/lib/supabase/server.ts` — `createServerClient()` + `cookies()` (Server Component/Route Handler용)
+- 혼용 금지: 환경별 클라이언트를 반드시 구분해서 사용
+
+### Notion API 연동
+- Server Component에서 직접 호출 (API 키 서버 사이드 보호)
+- `src/lib/notion.ts`: 클라이언트 초기화 + 쿼리 함수 (`getInvoices`, `getInvoiceBySlug`)
+- ISR `revalidate: 60`으로 캐싱 (Notion API 속도 제한 대응)
+
+### PDF 생성
+- Route Handler 전용: `GET /api/invoice/[slug]/pdf`
+- `@react-pdf/renderer`의 `renderToBuffer()` → `application/pdf` 응답
+- 한국어 폰트: `public/fonts/NotoSansKR-Regular.ttf` 임베딩
+
 ### 컴포넌트 조직
-- **UI 컴포넌트** (`src/components/ui/`): shadcn 기반 재사용 가능한 저수준 컴포넌트
-- **레이아웃 컴포넌트** (`src/components/layout/`): Header, Footer, Container 등 페이지 레이아웃 구성
-- **테마 컴포넌트** (`src/components/theme/`): next-themes 통합 및 테마 토글
+- **UI 컴포넌트** (`src/components/ui/`): shadcn 기반 재사용 저수준 컴포넌트
+- **도메인 컴포넌트** (`src/components/invoice/`): 견적서 관련 컴포넌트
+- **레이아웃 컴포넌트** (`src/components/layout/`): Header, Footer, Container
+- **테마 컴포넌트** (`src/components/theme/`): next-themes 통합
 
 ### 스타일링 규칙
 - **Tailwind CSS**: 유틸리티 클래스 기반 스타일링
