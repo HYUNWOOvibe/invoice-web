@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Bash(lsof -i :3000)",
+      "Bash(xargs kill -9)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(xargs -I {} taskkill /PID {} /F)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(pkill:*)",
+      "Bash(taskkill:*)",
+      "MCP__playwright",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "playwright"
+  ]
+}
