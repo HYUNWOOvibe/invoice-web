@@ -6,8 +6,6 @@ import { Container } from "@/components/layout/container";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
-// TODO: 로그인 상태 확인 후 /dashboard로 리디렉션 구현 예정
-
 export default function Home() {
   const features = [
     {
@@ -48,13 +46,8 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                 <Button asChild size="lg">
-                  <Link href="/signup">
-                    무료로 시작하기 <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/login">
-                    로그인
+                  <Link href="/dashboard">
+                    대시보드 바로가기 <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -102,10 +95,7 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                 <Button asChild size="lg">
-                  <Link href="/signup">회원가입</Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/login">로그인</Link>
+                  <Link href="/dashboard">대시보드 바로가기</Link>
                 </Button>
               </div>
             </div>

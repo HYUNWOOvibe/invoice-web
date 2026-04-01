@@ -9,9 +9,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const navLinks = [
   { href: "/", label: "홈" },
-  { href: "/components", label: "컴포넌트" },
-  { href: "/#features", label: "기능" },
-  { href: "/#pricing", label: "요금" },
+  { href: "/dashboard", label: "대시보드" },
 ];
 
 export function Header() {
@@ -24,9 +22,9 @@ export function Header() {
           {/* 로고 */}
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
-              N
+              I
             </div>
-            <span className="hidden sm:inline">Next.js Starter</span>
+            <span className="hidden sm:inline">InvoiceWeb</span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}

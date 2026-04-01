@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@notionhq/client": "^5.13.0",
+    "@notionhq/client": "^2.3.0",
     "@react-pdf/renderer": "^4.3.2",
     "@supabase/supabase-js": "^2.99.2",
     "class-variance-authority": "^0.7.1",
